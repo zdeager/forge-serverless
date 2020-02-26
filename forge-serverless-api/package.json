@@ -1,0 +1,13 @@
+{
+  "name": "forge-serverless-api",
+  "version": "0.0.0",
+  "author": "",
+  "devDependencies": {
+    "serverless-bundle": "^1.2.5",
+    "serverless-dotenv-plugin": "^2.1.1",
+    "serverless-offline": "^5.3.3"
+  },
+  "dependencies": {
+    "forge-apis": "^0.7.3"
+  }
+}

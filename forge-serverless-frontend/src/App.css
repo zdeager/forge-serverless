@@ -1,0 +1,39 @@
+.App {
+  margin-top: 15px;
+}
+.fill{
+  height: calc(100vh - 100px);
+  margin: 0;
+}
+
+/*document panel styles*/
+.panel {
+  border-color: #e7e7e7;
+}
+.panel-heading {
+  background-color: #f8f8f8;
+}
+.panel-content {
+  padding: 30px;
+  padding-top: 90px;
+  text-align: center;
+}
+.user-hubs {
+  overflow: auto;
+  width: 100%;
+  height: calc(100vh - 130px);
+}
+.col-sm-4.fill {
+  padding-left: 0;
+}
+.glyphicon {
+  top: 3px;
+}
+
+/*viewer panel styles*/
+#forgeViewer {
+  width: 100%;
+}
+.col-sm-8.fill {
+  margin-left: -15px;
+}
