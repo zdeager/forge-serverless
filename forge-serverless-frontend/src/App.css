@@ -1,14 +1,17 @@
 .App {
   margin-top: 15px;
+  width: auto;
 }
 .fill{
   height: calc(100vh - 100px);
   margin: 0;
+  padding: 0;
 }
 
 /*document panel styles*/
 .panel {
   border-color: #e7e7e7;
+  margin-right: 15px;
 }
 .panel-heading {
   background-color: #f8f8f8;

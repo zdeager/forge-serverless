@@ -5,5 +5,6 @@ export default {
   apiGateway: {
     REGION: "us-east-2",
     URL: "https://xxxxxxxxxx.execute-api.us-east-2.amazonaws.com/dev"
-  }
+  },
+  extensions: ['SampleExtension']
 };

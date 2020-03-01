@@ -1,0 +1,6 @@
+.extension-toolbar {
+  /*"detach" group from the others and adjust position as desired*/
+  position: absolute; 
+  left: 20px;
+  bottom: 100px;
+}

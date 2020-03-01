@@ -8,11 +8,17 @@ import { API } from "aws-amplify";
 
 // helper dependencies
 import TreeView from 'react-simple-jstree';
-const queryString = require('query-string');
+import queryString from 'query-string';
 
 // local configs, styles, etc.
 import config from './config';
 import "./App.css";
+config.extensions.forEach(ext => {
+  // import extensions specified in config.js (registers extension w/ viewer)
+  import('./Extensions/'+ext); 
+})
+import './Extensions/ExtensionToolbars.css'; // extension toolbar(s) styles
+
 
 function App(props) {
   // viewer variables
@@ -26,7 +32,7 @@ function App(props) {
 
   // "componentdidmount"
   useEffect(() => {
-    authenticate(); // try to log user in
+    authenticate();
   }, []);
 
   // listen for changes to session state variable
@@ -136,7 +142,8 @@ function App(props) {
 
         // initialize the viewer
         Autodesk.Viewing.Initializer(options, () => {
-          viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('forgeViewer'));
+          // create new viewer and load extensions specified in config.js
+          viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('forgeViewer'), { extensions: config.extensions });
           viewer.start();
         });
       }
@@ -225,7 +232,7 @@ function App(props) {
         </Navbar.Header>
       </Navbar>
       <div className="row fill">
-        <div className="col-sm-4 fill">
+        <div className="col-sm-3 fill">
           <div className="panel panel-default fill">
             { 
               user_profile ? (
@@ -286,7 +293,7 @@ function App(props) {
             </div>
           </div>
         </div>
-        <div className="col-sm-8 fill">
+        <div className="col-sm-9 fill">
             <div id="forgeViewer"/>
         </div>
       </div>
