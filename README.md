@@ -9,6 +9,10 @@
 [![OSS](https://img.shields.io/badge/OSS-v2-green.svg)](http://developer.autodesk.com/)
 [![Model-Derivative](https://img.shields.io/badge/Model%20Derivative-v2-green.svg)](http://developer.autodesk.com/)
 
+<p align="center">
+  <img src="https://forge-serverless-images.s3.us-east-2.amazonaws.com/forge-serverless-gif.gif" alt="forge-serverless-gif"/>
+</p>
+
 # Description
 
 This an alternative implementation of this [Learn Forge](http://learnforge.autodesk.io) tutorial using Serverless and React on [Amazon Web Services](https://aws.amazon.com/). This project does not contain all aspects of the aforementioned tutorial but can hopefully serve as a good starting point. 

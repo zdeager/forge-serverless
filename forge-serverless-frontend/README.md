@@ -11,7 +11,7 @@ This directory contains a React-based client application which leverages the ser
 # Setup
 
 ## Set up the React app
-Navigate to the directory of this project (the directory containing the **public** and **src** directories) in a terminal and run:
+Navigate to this directory (containing of the frontend) in a terminal and run:
 `npm install`
 
 ## Configure the application
