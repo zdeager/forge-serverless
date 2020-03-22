@@ -1,5 +1,5 @@
 // React stuff
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
 // API requests via amplify
@@ -13,43 +13,15 @@ class DisciplinePanel extends Autodesk.Viewing.UI.DockingPanel {
   constructor (viewer, options) {
     super(viewer.container, options.id, options.title, options);
 
-    // set init panel data
-    this.panel_data = {
-      discipline_id: options.discipline_id,
-      critical_asset_groups: null,
-      selected_group: "",
-      critical_assets: null,
-      selected_asset: ""
-    }
-    // functions for fetching/updating panel data
-    this.panel_data.selectGroup = (group) => {
-      console.log(group);
-      this.panel_data.selected_group = group;
-      API.get("forge-serverless-api", "/groups/" + group).then(resp => {
-        this.panel_data.critical_assets = resp.assets;
-        this.reactNode = ReactDOM.render(
-          <DisciplinePanelContent panel_data={this.panel_data} />, 
-          this.DOMContent
-        );
-      });
-    }
-    this.panel_data.selectAsset = (asset) => {
-      console.log(asset);
-      this.panel_data.selected_asset = asset;
-      this.reactNode = ReactDOM.render(
-        <DisciplinePanelContent panel_data={this.panel_data} />, 
-        this.DOMContent
-      );
-      viewer.fitToView([40487]);
-      viewer.isolate(40487);
-    }
-
     // create element to hold react content
     this.DOMContent = document.createElement('div');
     this.DOMContent.className = 'content';
     this.container.classList.add('react-docking-panel');
     // add element to panel
     this.container.appendChild(this.DOMContent);
+    // props for panel content
+    this.discipline_id = options.discipline_id;
+    this.viewer = viewer;
   }
 
   setVisible (show) {
@@ -58,85 +30,94 @@ class DisciplinePanel extends Autodesk.Viewing.UI.DockingPanel {
     if (show) { // show -> render react content
       // initial render
       this.reactNode = ReactDOM.render(
-        <DisciplinePanelContent panel_data={this.panel_data} />, 
+        <DisciplinePanelContent discipline_id={this.discipline_id} viewer={this.viewer} />, 
         this.DOMContent
       );
-      // fetch data for discipline, update panel data
-      API.get("forge-serverless-api", "/disciplines/" + this.panel_data.discipline_id).then(resp => {
-        this.panel_data.critical_asset_groups = resp.critical_asset_groups;
-        this.reactNode = ReactDOM.render(
-          <DisciplinePanelContent panel_data={this.panel_data}/>, 
-          this.DOMContent
-        );
-      });
     } else if (this.DOMContent) { // hide -> destroy react content and panel data
       ReactDOM.unmountComponentAtNode(this.DOMContent);
       this.reactNode = null;
-      Object.assign(this.panel_data, {
-        critical_asset_groups: null,
-        selected_group: "",
-        critical_assets: null,
-        selected_asset: ""
-      });
     }
   }
 }
 
 // Panel content (React)
-function DisciplinePanelContent(props){
-  console.log(props);
-  const { critical_asset_groups, 
-          selected_group, selectGroup,
-          critical_assets,
-          selected_asset, selectAsset } = props.panel_data;
-  const group_select = critical_asset_groups ? (
+function DisciplinePanelContent(props) {
+  const [isLoading, setLoading] = useState(true);
+  const [groups, setGroups] = useState(null);
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [assets, setAssets] = useState(null);
+  const [selectedAsset, setSelectedAsset] = useState("");
+
+  useEffect(() => {
+    API.get("forge-serverless-api", "/disciplines/" + props.discipline_id).then(resp => {
+      setGroups(resp.critical_asset_groups);
+      setLoading(false);
+    });
+  }, [])
+
+  function selectGroup(group) {
+    API.get("forge-serverless-api", "/groups/" + group).then(resp => {
+      setAssets(resp.assets);
+      setSelectedGroup(group);
+    });
+  }
+
+  function selectAsset(asset) {
+    setSelectedAsset(asset);
+    props.viewer.fitToView([40487]);
+    props.viewer.isolate(40487);
+  }
+
+  const groupSelect = groups ? (
     <FormGroup className="panel_form">
       <ControlLabel>Critical Asset Groups</ControlLabel>
       <FormControl 
         componentClass="select"
-        value={selected_group}
+        value={selectedGroup}
         onChange={e => selectGroup(e.target.value)}
       >
         <option value="" disabled>Select</option>
         {
-          critical_asset_groups.map((group, idx) => {
+          groups.map((group, idx) => {
             return (<option key={idx} value={group}>{group}</option>)
           })
         }
       </FormControl>
     </FormGroup>
   ): null;
-  const asset_select = critical_assets ? (
+  const assetSelect = assets ? (
     <FormGroup className="panel_form">
       <ControlLabel>Critical Assets</ControlLabel>
       <FormControl 
         componentClass="select"
-        value={selected_asset}
+        value={selectedAsset}
         onChange={e => selectAsset(e.target.value)}
       >
         <option value="" disabled>Select</option>
         {
-          critical_assets.map((asset, idx) => {
+          assets.map((asset, idx) => {
             return (<option key={idx} value={asset}>{asset}</option>)
           })
         }
       </FormControl>
     </FormGroup>
   ) : null;
-  const asset_data = selected_asset ? (
+  const assetData = selectedAsset ? (
     <div>
       FUN DATA HERE!!!
     </div>
   ) : null;
 
-  return critical_asset_groups ? (
+  return !isLoading ? (
     <div className='react-content'>
-      { group_select }
-      { asset_select }
-      { asset_data }
+      { groupSelect }
+      { assetSelect }
+      { assetData }
     </div>
   ) : (
-    "Loading..."
+    <div className='react-content'>
+      Loading...
+    </div>
   );
 }
 
