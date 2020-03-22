@@ -17,6 +17,17 @@ provider:
     clientID: ${env:CLIENT_ID}
     clientSecret: ${env:CLIENT_SECRET}
     callbackURL: ${env:CALLBACK_URL}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:us-east-2:*:*"
 
 functions:
   create_session:
@@ -37,3 +48,17 @@ functions:
       - http:
           path: datamanagement
           method: get
+  get_discipline:
+    handler: functions/disciplines/get_discipline.get_discipline
+    events:
+      - http:
+          path: disciplines/{disc_id}
+          method: get
+          cors: true
+  get_group:
+    handler: functions/disciplines/get_group.get_group
+    events:
+      - http:
+          path: groups/{group_id}
+          method: get
+          cors: true

@@ -1,0 +1,7 @@
+.discipline-extension-btn {
+  background-image: url(https://www.pinclipart.com/picdir/big/374-3748380_black-question-mark-emoji-clipart.png);
+  background-size: 24px;
+  background-repeat: no-repeat;
+  background-position: center;
+  float: none !important; /*make the buttons stack vertically*/
+}

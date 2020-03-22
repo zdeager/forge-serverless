@@ -1,0 +1,20 @@
+.react-docking-panel {
+  left: 25px;
+  top: 25px;
+  height: 200px;
+  width: 250px;
+  resize: auto;
+}
+
+.react-docking-panel .content {
+  height: calc(100% - 70px);
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+.react-docking-panel .content .react-content {
+  padding: 10px;
+}
+
+.panel_form {
+  width: 50%;
+}
