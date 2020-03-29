@@ -8,7 +8,44 @@ class DisciplineExtension extends Autodesk.Viewing.Extension {
   constructor(viewer, options) {
     super(viewer, options);
     this._group = null;
-    this._button = null;
+    this._disciplines = [
+      {
+        name: "Mechanical",
+        groups: ["HVAC", "Heating & Cooling"]
+      },
+      {
+        name: "Electrical",
+        groups: ["High & Medium Voltage", "Automatic Transfer System"]
+      },
+      {
+        name: "Fire Protection",
+        groups: ["Fire Fighting"]
+      },
+      {
+        name: "Plumbing",
+        groups: ["Wastewater", "Domestic Water"]
+      },
+      {
+        name: "Special Airport Systems",
+        groups: ["Baggage Handling System", "Baggage Screening",
+          "Security Access Control", "Lift Elevator Escalator",
+          "Passenger Boarding Bridge"]
+      },
+      {
+        name: "Information Technology",
+        groups: ["Information Communication"]
+      },
+      {
+        name: "Architecture",
+        groups: []
+      },
+      {
+        name: "Structure",
+        groups: []
+      }
+    ];
+    this._buttons = this._disciplines.map(disp => null);
+    this._panels = this._buttons.slice();
   }
 
   load() {
@@ -19,17 +56,21 @@ class DisciplineExtension extends Autodesk.Viewing.Extension {
   unload() {
     // remove toolbar group and buttons
     if (this._group) {
-      this._group.removeControl(this._button);
+      this._buttons.forEach((button, idx) => {
+        this._group.removeControl(this._buttons[idx]);
+      });
       if (this._group.getNumberOfControls() === 0) {
         this.viewer.toolbar.removeControl(this._group);
       }
     }
 
-    // hide and clean up panel
-    if (this._panel) {
-      this._panel.setVisible(false);
-      this._panel = null;
-    }
+    // hide and clean up panels
+    this._panels.forEach((panel, idx) => {
+      if (this._panels[idx]) {
+        this._panels[idx].setVisible(false);
+        this._panels[idx] = null;
+      }
+    });
 
     console.log('DisciplineExtension has been unloaded');
     return true;
@@ -37,30 +78,33 @@ class DisciplineExtension extends Autodesk.Viewing.Extension {
 
   onToolbarCreated() {
     // create a new toolbar group if it doesn't exist
-    this._group = this.viewer.toolbar.getControl('ExtensionsToolbar');
+    this._group = this.viewer.toolbar.getControl('DisciplinesToolbar');
     if (!this._group) {
-      this._group = new Autodesk.Viewing.UI.ControlGroup('ExtensionsToolbar');
+      this._group = new Autodesk.Viewing.UI.ControlGroup('DisciplinesToolbar');
       this._group.addClass('extension-toolbar'); // add css class from ExtensionToolbar.css
       this.viewer.toolbar.addControl(this._group);
     }
 
-    // add a new button to the toolbar group
-    this._button = new Autodesk.Viewing.UI.Button('DisciplineExtensionButton');
-    this._button.onClick = event => {
-      // create panel if it doesn't exist
-      if (this._panel == null)
-        this._panel = new DisciplinePanel(this.viewer, {id: 'react-panel', title: 'Discipline 1',
-                                                          discipline_id: 'disc_1'});
-      // show/hide panel
-      this._panel.setVisible(!this._panel.isVisible());
+    this._disciplines.forEach((disc, idx) => {
+      // add a new button to the toolbar group
+      this._buttons[idx] = new Autodesk.Viewing.UI.Button(disc.name + 'ExtensionButton');
+      this._buttons[idx].onClick = event => {
+        // create panel if it doesn't exist
+        if (this._panels[idx] == null)
+          this._panels[idx] = new DisciplinePanel(this.viewer, 
+            {id: disc.name, title: disc.name, groups: disc.groups}
+          );
+        // show/hide panel
+        this._panels[idx].setVisible(!this._panels[idx].isVisible());
 
-      // If panel is NOT visible, exit the function
-      if (!this._panel.isVisible())
-        return;
-    };
-    this._button.setToolTip('Discipline Extension');
-    this._button.addClass('discipline-extension-btn'); 
-    this._group.addControl(this._button);
+        // If panel is NOT visible, exit the function
+        if (!this._panels[idx].isVisible())
+          return;
+      };
+      this._buttons[idx].setToolTip(disc.name);
+      this._buttons[idx].addClass('discipline-extension-btn'); 
+      this._group.addControl(this._buttons[idx]);
+    });
   }
 }
 

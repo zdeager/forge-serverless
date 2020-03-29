@@ -20,7 +20,7 @@ class DisciplinePanel extends Autodesk.Viewing.UI.DockingPanel {
     // add element to panel
     this.container.appendChild(this.DOMContent);
     // props for panel content
-    this.discipline_id = options.discipline_id;
+    this.groups = options.groups;
     this.viewer = viewer;
   }
 
@@ -30,7 +30,7 @@ class DisciplinePanel extends Autodesk.Viewing.UI.DockingPanel {
     if (show) { // show -> render react content
       // initial render
       this.reactNode = ReactDOM.render(
-        <DisciplinePanelContent discipline_id={this.discipline_id} viewer={this.viewer} />, 
+        <DisciplinePanelContent groups={this.groups} viewer={this.viewer} />, 
         this.DOMContent
       );
     } else if (this.DOMContent) { // hide -> destroy react content and panel data
@@ -42,35 +42,29 @@ class DisciplinePanel extends Autodesk.Viewing.UI.DockingPanel {
 
 // Panel content (React)
 function DisciplinePanelContent(props) {
-  const [isLoading, setLoading] = useState(true);
-  const [groups, setGroups] = useState(null);
+  const [isLoading, setLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState("");
   const [assets, setAssets] = useState(null);
   const [selectedAsset, setSelectedAsset] = useState("");
 
-  useEffect(() => {
-    API.get("forge-serverless-api", "/disciplines/" + props.discipline_id).then(resp => {
-      setGroups(resp.critical_asset_groups);
-      setLoading(false);
-    });
-  }, [])
-
   function selectGroup(group) {
-    API.get("forge-serverless-api", "/groups/" + group).then(resp => {
-      setAssets(resp.assets);
-      setSelectedGroup(group);
-    });
+    // search model for elements in asset group
+    props.viewer.search(group, 
+    function(dbIds){
+       setAssets(dbIds);
+       setSelectedGroup(group);
+    }, null, ['Asset Group'])
   }
 
   function selectAsset(asset) {
     setSelectedAsset(asset);
-    props.viewer.fitToView([40487]);
-    props.viewer.isolate(40487);
+    props.viewer.fitToView([asset]);
+    //props.viewer.isolate(asset);
   }
 
-  const groupSelect = groups ? (
+  const groupSelect = props.groups ? (
     <FormGroup className="panel_form">
-      <ControlLabel>Critical Asset Groups</ControlLabel>
+      <ControlLabel>Asset Groups</ControlLabel>
       <FormControl 
         componentClass="select"
         value={selectedGroup}
@@ -78,7 +72,7 @@ function DisciplinePanelContent(props) {
       >
         <option value="" disabled>Select</option>
         {
-          groups.map((group, idx) => {
+          props.groups.map((group, idx) => {
             return (<option key={idx} value={group}>{group}</option>)
           })
         }
