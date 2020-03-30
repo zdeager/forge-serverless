@@ -6,8 +6,10 @@ import ReactDOM from 'react-dom';
 import { API } from "aws-amplify";
 
 // panel styles
-import { FormGroup, FormControl, ControlLabel } from "react-bootstrap";
+import { FormGroup, FormControl, ControlLabel, Nav, NavItem } from "react-bootstrap";
 import './DisciplinePanel.css';
+
+import pic from './pic.png';
 
 class DisciplinePanel extends Autodesk.Viewing.UI.DockingPanel {
   constructor (viewer, options) {
@@ -46,14 +48,20 @@ function DisciplinePanelContent(props) {
   const [selectedGroup, setSelectedGroup] = useState("");
   const [assets, setAssets] = useState(null);
   const [selectedAsset, setSelectedAsset] = useState("");
+  const [tab, setTab] = useState(1);
 
   function selectGroup(group) {
     // search model for elements in asset group
-    props.viewer.search(group, 
-    function(dbIds){
-       setAssets(dbIds);
-       setSelectedGroup(group);
-    }, null, ['Asset Group'])
+    props.viewer.search(`"`+group+`"`, async dbIds => {
+      const assets = await Promise.all(dbIds.map(async dbId => {
+        const res = await new Promise(resolve => {
+          props.viewer.model.getProperties(dbId, props => resolve(props));
+        })
+        return {extId: res.externalId, name: res.name, dbId: dbId};
+      }));
+      setAssets(assets);
+      setSelectedGroup(group);
+    }, null, ['Asset Group']);
   }
 
   function selectAsset(asset) {
@@ -62,8 +70,24 @@ function DisciplinePanelContent(props) {
     //props.viewer.isolate(asset);
   }
 
+  function tabContent() {
+    if (tab === 1) { // overview
+      return (
+        <span>
+          <strong>Criticality</strong> 3<br/>
+          <strong>Assignee</strong> Bob Doss<br/>
+          <strong>Data Sources</strong> ????<br/>
+          <strong>Functional Location</strong> BLDG-FLOOR-ROOM<br/>
+          <strong>More Fun Stuff</strong><br/>
+        </span>
+      );
+    } else if (tab === 4) { // cost data
+      return <img height="400px" src={pic} alt="pic" />;
+    }
+  }
+
   const groupSelect = props.groups ? (
-    <FormGroup className="panel_form">
+    <FormGroup className="panel-form-l">
       <ControlLabel>Asset Groups</ControlLabel>
       <FormControl 
         componentClass="select"
@@ -80,7 +104,7 @@ function DisciplinePanelContent(props) {
     </FormGroup>
   ): null;
   const assetSelect = assets ? (
-    <FormGroup className="panel_form">
+    <FormGroup className="panel-form-r">
       <ControlLabel>Critical Assets</ControlLabel>
       <FormControl 
         componentClass="select"
@@ -90,7 +114,7 @@ function DisciplinePanelContent(props) {
         <option value="" disabled>Select</option>
         {
           assets.map((asset, idx) => {
-            return (<option key={idx} value={asset}>{asset}</option>)
+            return (<option key={idx} value={asset.dbId}>{asset.name}</option>)
           })
         }
       </FormControl>
@@ -98,14 +122,35 @@ function DisciplinePanelContent(props) {
   ) : null;
   const assetData = selectedAsset ? (
     <div>
-      FUN DATA HERE!!!
+      <Nav bsStyle="tabs" activeKey={tab} onSelect={k => setTab(k)}>
+        <NavItem eventKey={1}>
+          Overview
+        </NavItem>
+        <NavItem eventKey={2}>
+          Warranty & Spare Parts
+        </NavItem>
+        <NavItem eventKey={3} >
+          Cost Data
+        </NavItem>
+        <NavItem eventKey={4} >
+          Sensor Data
+        </NavItem>
+        <NavItem eventKey={5} >
+          Condition Index
+        </NavItem>
+      </Nav>
+      <div className="tab-content">
+        { tabContent() }
+      </div>
     </div>
   ) : null;
 
   return !isLoading ? (
     <div className='react-content'>
+      <div className='panel-form-container'>
       { groupSelect }
       { assetSelect }
+      </div>
       { assetData }
     </div>
   ) : (
