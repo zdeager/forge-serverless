@@ -46,6 +46,7 @@ class DisciplineExtension extends Autodesk.Viewing.Extension {
     ];
     this._buttons = this._disciplines.map(disp => null);
     this._panels = this._buttons.slice();
+    this._document = options.document;
   }
 
   load() {
@@ -92,7 +93,7 @@ class DisciplineExtension extends Autodesk.Viewing.Extension {
         // create panel if it doesn't exist
         if (this._panels[idx] == null)
           this._panels[idx] = new DisciplinePanel(this.viewer, 
-            {id: disc.name, title: disc.name, groups: disc.groups}
+            {id: disc.name, title: disc.name, groups: disc.groups, document: this._document}
           );
         // show/hide panel
         this._panels[idx].setVisible(!this._panels[idx].isVisible());
