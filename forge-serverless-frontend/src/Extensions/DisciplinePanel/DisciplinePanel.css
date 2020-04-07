@@ -50,7 +50,7 @@
   color:#777;
 }
 
-/*tab content*/
+/*tab contents*/
 .tab-content {
   width: calc(100% - 40px);
   padding: 20px;
@@ -91,4 +91,8 @@ a {
 #viewer2D > .adsk-viewing-viewer.notouch.dark-theme.quality-text {
   height: 44vh !important;
   width: calc(100% - 60px) !important;
+}
+
+.apexcharts-tooltip {
+  color: #000;
 }

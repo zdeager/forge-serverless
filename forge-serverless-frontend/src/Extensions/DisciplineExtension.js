@@ -11,38 +11,42 @@ class DisciplineExtension extends Autodesk.Viewing.Extension {
     this._disciplines = [
       {
         name: "Mechanical",
-        groups: ["HVAC", "Heating & Cooling"]
+        groups: ["HVAC", "Heating & Cooling"],
+        icon: "mech"
       },
       {
         name: "Electrical",
-        groups: ["High & Medium Voltage", "Automatic Transfer System"]
+        groups: ["High & Medium Voltage", "Automatic Transfer System"],
+        icon: "elec"
       },
       {
         name: "Fire Protection",
-        groups: ["Fire Fighting"]
+        groups: ["Fire Fighting"],
+        icon: "fire"
       },
       {
         name: "Plumbing",
-        groups: ["Wastewater", "Domestic Water"]
+        groups: ["Wastewater", "Domestic Water"],
+        icon: "pipe"
       },
-      {
-        name: "Special Airport Systems",
-        groups: ["Baggage Handling System", "Baggage Screening",
-          "Security Access Control", "Lift Elevator Escalator",
-          "Passenger Boarding Bridge"]
-      },
-      {
-        name: "Information Technology",
-        groups: ["Information Communication"]
-      },
-      {
-        name: "Architecture",
-        groups: []
-      },
-      {
-        name: "Structure",
-        groups: []
-      }
+      // {
+      //   name: "Special Airport Systems",
+      //   groups: ["Baggage Handling System", "Baggage Screening",
+      //     "Security Access Control", "Lift Elevator Escalator",
+      //     "Passenger Boarding Bridge"]
+      // },
+      // {
+      //   name: "Information Technology",
+      //   groups: ["Information Communication"]
+      // },
+      // {
+      //   name: "Architecture",
+      //   groups: []
+      // },
+      // {
+      //   name: "Structure",
+      //   groups: []
+      // }
     ];
     this._buttons = this._disciplines.map(disp => null);
     this._panels = this._buttons.slice();
@@ -104,6 +108,7 @@ class DisciplineExtension extends Autodesk.Viewing.Extension {
       };
       this._buttons[idx].setToolTip(disc.name);
       this._buttons[idx].addClass('discipline-extension-btn'); 
+      this._buttons[idx].addClass('discipline-extension-btn-' + disc.icon); 
       this._group.addControl(this._buttons[idx]);
     });
   }

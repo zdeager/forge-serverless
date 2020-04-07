@@ -1,7 +1,22 @@
 .discipline-extension-btn {
-  background-image: url(https://www.pinclipart.com/picdir/big/374-3748380_black-question-mark-emoji-clipart.png);
   background-size: 24px;
   background-repeat: no-repeat;
   background-position: center;
   float: none !important; /*make the buttons stack vertically*/
+}
+
+.discipline-extension-btn-fire {
+  background-image: url(https://forge-serverless-images.s3.us-east-2.amazonaws.com/fire.png);
+}
+
+.discipline-extension-btn-pipe {
+  background-image: url(https://forge-serverless-images.s3.us-east-2.amazonaws.com/pipe.png);
+}
+
+.discipline-extension-btn-elec {
+  background-image: url(https://forge-serverless-images.s3.us-east-2.amazonaws.com/electric.png);
+}
+
+.discipline-extension-btn-mech {
+  background-image: url(https://forge-serverless-images.s3.us-east-2.amazonaws.com/mech.png);
 }

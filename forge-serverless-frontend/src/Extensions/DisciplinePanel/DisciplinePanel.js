@@ -5,6 +5,9 @@ import ReactDOM from 'react-dom';
 // API requests via amplify
 import { API } from "aws-amplify";
 
+// apexcharts
+import Chart from 'react-apexcharts'
+
 // panel styles
 import { 
   FormGroup, 
@@ -17,8 +20,6 @@ import {
   Button 
 } from "react-bootstrap";
 import './DisciplinePanel.css';
-
-import pic from './pic.png';
 
 class DisciplinePanel extends Autodesk.Viewing.UI.DockingPanel {
   constructor (viewer, options) {
@@ -174,7 +175,173 @@ function DisciplinePanelContent(props) {
         </Row>
       );
     } else if (tab === 2) { // cost data
-      return <img height="400px" src={pic} alt="pic" />;
+      let state = {
+        series: [{
+          name: 'Procurement',
+          data: [80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        }, {
+          name: 'Maintenance (Labor)',
+          data: [0, 2.50, 2.70, 2.91, 3.14, 3.40, 3.67, 3.96, 4.28, 4.62, 4.99]
+        }, {
+          name: 'Maintenance (Material)',
+          data: [0, 5.00, 5.40, 5.83, 6.29, 6.80, 7.34, 7.93, 8.56, 9.25, 9.99]
+        }, {
+          name: 'Depreciation',
+          data: [0, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5]
+        }],
+        options: {
+          chart: {
+            type: 'bar',
+            height: 350,
+            stacked: true,
+            toolbar: {
+              show: false
+            },
+          },
+          plotOptions: {
+            bar: {
+              horizontal: false,
+            },
+          },
+          stroke: {
+            width: 1,
+            colors: ['#fff']
+          },
+          title: {
+            text: 'Cost Data',
+            style: {
+              color:  '#fff'
+            },
+          },
+          xaxis: {
+            categories: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            labels: {
+              style: {
+                  colors: ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
+              },
+            },
+            title: {
+              text: 'Year',
+              style: {
+                color:  '#fff'
+              },
+            },
+          },
+          yaxis: {
+            title: {
+              text: 'Cost (USD)',
+              style: {
+                color:  '#fff'
+              },
+            },
+            labels: {
+              formatter: function (val) {
+                return val + "K"
+              },
+              style: {
+                  colors: ['#fff', '#fff', '#fff', '#fff', '#fff', '#fff', '#fff'],
+              },
+            }
+          },
+          tooltip: {
+            x: {
+              formatter: function (val) {
+                return "Year " + val
+              }
+            }
+          },
+          fill: {
+            opacity: 1
+          },
+          legend: {
+            position: 'top',
+            horizontalAlign: 'left',
+            offsetX: 0,
+            labels: {
+                colors: '#fff'
+            }
+          }
+        },
+      };
+
+      let state2 = {
+        series: [{
+            name: "CI",
+            data: [null, 90.81, 90.27, 89.70, 89.09, 88.45, 87.77, 87.05, 86.29, 85.48, 84.63]
+        }],
+        options: {
+          chart: {
+            height: 350,
+            type: 'line',
+            zoom: {
+              enabled: false
+            },
+            toolbar: {
+              show: false
+            },
+          },
+          dataLabels: {
+            enabled: false
+          },
+          stroke: {
+            curve: 'smooth'
+          },
+          title: {
+            text: 'Condition Index',
+            align: 'left',
+            style: {
+              color:  '#fff'
+            },
+          },
+          grid: {
+            row: {
+              colors: ['transparent'], // takes an array which will be repeated on columns
+            },
+          },
+          xaxis: {
+            categories: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            labels: {
+              style: {
+                  colors: ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
+              },
+            },
+            title: {
+              text: "Year",
+              style: {
+                color:  '#fff'
+              },
+            },
+          },
+          yaxis: {
+            title: {
+              text: undefined
+            },
+            labels: {
+              formatter: function (val) {
+                return val + "%"
+              },
+              style: {
+                  colors: ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
+              },
+            }
+          },
+          tooltip: {
+            x: {
+              formatter: function (val) {
+                return "Year " + (val-1)
+              }
+            }
+          },
+        },  
+      };
+        
+      return (
+        <React.Fragment>
+        <Chart options={state2.options} series={state2.series} type="line" width={600} height={350} />
+        <Chart options={state.options} series={state.series} type="bar" width={600} height={320} />
+        </React.Fragment>
+      )
+      
     } else if (tab === 4) {
       return <div id="viewer2D"/>
     }
