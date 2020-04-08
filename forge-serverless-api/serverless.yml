@@ -48,17 +48,10 @@ functions:
       - http:
           path: datamanagement
           method: get
-  get_discipline:
-    handler: functions/disciplines/get_discipline.get_discipline
+  get_asset:
+    handler: functions/disciplines/get_asset.get_asset
     events:
       - http:
-          path: disciplines/{disc_id}
-          method: get
-          cors: true
-  get_group:
-    handler: functions/disciplines/get_group.get_group
-    events:
-      - http:
-          path: groups/{group_id}
+          path: assets/{asset_id}
           method: get
           cors: true

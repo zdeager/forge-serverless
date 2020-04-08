@@ -2,10 +2,10 @@ import AWS from "aws-sdk";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
-export const get_discipline = (event, context, callback) => {
+export const get_group = (event, context, callback) => {
   const params = {
-    TableName: "Disciplines",
-    Key: {discipline_id: event.pathParameters.disc_id}
+    TableName: "CriticalAssets",
+    Key: {asset_id: event.pathParameters.asset_id}
   };
 
   dynamoDb.get(params, (error, data) => {

@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
-// API requests via amplify
+// helper packages
 import { API } from "aws-amplify";
-
-// apexcharts
 import Chart from 'react-apexcharts'
+import moment from 'moment'
+import { CIVizData, CostVizData } from './DisciplineCharts'
 
 // panel styles
 import { 
@@ -55,22 +55,12 @@ class DisciplinePanel extends Autodesk.Viewing.UI.DockingPanel {
 
 // Panel content (React)
 function DisciplinePanelContent(props) {
-  const [isLoading, setLoading] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState("");
   const [assets, setAssets] = useState(null);
   const [selectedAsset, setSelectedAsset] = useState("");
+  const [assetData, setAssetData] = useState(null);
   const [tab, setTab] = useState(1);
   const [showId, setShowId] = useState(false);
-  const [notes, setNotes] = useState([
-    {
-      date: "13 May 2010",
-      text: "Procured."
-    },
-    {
-      date: "21 Feb 2018",
-      text: "Sensor replaced."
-    }
-  ]);
   const [noteInput, setNoteInput] = useState("");
 
   function selectGroup(group) {
@@ -89,9 +79,13 @@ function DisciplinePanelContent(props) {
   }
 
   function selectAsset(asset_idx) {
-    setSelectedAsset(assets[asset_idx]);
-    props.viewer.fitToView([assets[asset_idx].dbId]);
-    //props.viewer.isolate(asset);
+    const asset = assets[asset_idx];
+    API.get("forge-serverless-api", "/assets/" + asset.extId).then(resp => {
+      setSelectedAsset(asset);
+      setAssetData(resp);
+      props.viewer.fitToView([asset.dbId]);
+      props.viewer.isolate([asset.dbId]);
+    });
   }
 
   function addNote() {
@@ -113,36 +107,50 @@ function DisciplinePanelContent(props) {
               <div className="data-block"><span className="data-label">UniqueID</span>
                 { !showId ? <a onClick={()=>setShowId(true)}>Show</a> : selectedAsset.extId }
               </div>
-              <div className="data-block"><span className="data-label">Criticality</span>3</div>
+              <div className="data-block">
+                <span className="data-label">Criticality</span>{ assetData.criticality }
+              </div>
               <div className="data-block">
                 <span className="data-label">Assignee(s)</span>
                 <ul className="data-list">
-                  <li>Bob Doss <a>Contact</a></li>
-                  <li>Jane Novak <a>Contact</a></li>
+                  {
+                    assetData.contacts.map((contact, idx) => (
+                      <li key={idx}>{contact.name} <a>Contact</a></li>
+                    ))
+                  }
                 </ul>
               </div>
               <div className="data-block">
                 <span className="data-label">Information System(s)</span>
                 <ul className="data-list">
-                  <li>CMMS</li>
-                  <li>ERP</li>
+                  {
+                    assetData.sources.map((source, idx) => (
+                      <li key={idx}>{ source.name }</li>
+                    ))
+                  }
                 </ul>
               </div>
               <div className="data-block">
                 <span className="data-label">Functional Location</span>
                 <ul className="data-list">
-                  <li><span className="data-label">Building</span> 08</li>
-                  <li><span className="data-label">Floor</span> 1</li>
-                  <li><span className="data-label">Room</span> 324</li>
-                  <li><span className="data-label">Room Func.</span> Unknown</li>
+                  <li><span className="data-label">Building</span>{ assetData.location.building }</li>
+                  <li><span className="data-label">Floor</span>{ assetData.location.floor }</li>
+                  <li><span className="data-label">Room</span>{ assetData.location.room }</li>
+                  <li><span className="data-label">Room Func.</span>{ assetData.location.func }</li>
                 </ul>
               </div>
               <div className="data-block">
                 <span className="data-label">Warranty</span>
                 <ul className="data-list">
-                    <li><span className="data-label">Procured</span> 13 May 2010</li>
-                    <li><span className="data-label">Expires</span> 13 May 2020</li>
-                    <li><span className="data-label">Spare Parts</span> None</li>
+                    <li><span className="data-label">Procured</span> 
+                      { moment(new Date(assetData.warranty.procure_date)).format("ll") }
+                    </li>
+                    <li><span className="data-label">Expires</span>
+                      { moment(new Date(assetData.warranty.expir_date)).format("ll") }
+                    </li>
+                    <li><span className="data-label">Spare Parts</span>
+                      { assetData.warranty.spare_parts }
+                    </li>
                 </ul>
               </div>
               <div className="data-block">
@@ -154,10 +162,12 @@ function DisciplinePanelContent(props) {
           <Col xs={8}>
             <span className="data-label">Notes</span>
               {
-                notes.map((note, idx) => (
+                assetData.notes.map((note, idx) => (
                   <div key={idx} className="note">
-                    <div className="text-muted">{note.date}</div>
-                    <div>{note.text}</div>
+                    <div className="text-muted">
+                    { moment(new Date(note.date)).format("ll") } 
+                    </div>
+                    <div>{ note.note }</div>
                   </div>
                 ))
               }
@@ -174,188 +184,35 @@ function DisciplinePanelContent(props) {
           </Col>
         </Row>
       );
-    } else if (tab === 2) { // cost data
-      let state = {
-        series: [{
-          name: 'Procurement',
-          data: [80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        }, {
-          name: 'Maintenance (Labor)',
-          data: [0, 2.50, 2.70, 2.91, 3.14, 3.40, 3.67, 3.96, 4.28, 4.62, 4.99]
-        }, {
-          name: 'Maintenance (Material)',
-          data: [0, 5.00, 5.40, 5.83, 6.29, 6.80, 7.34, 7.93, 8.56, 9.25, 9.99]
-        }, {
-          name: 'Depreciation',
-          data: [0, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5]
-        }],
-        options: {
-          chart: {
-            type: 'bar',
-            height: 350,
-            stacked: true,
-            toolbar: {
-              show: false
-            },
-          },
-          plotOptions: {
-            bar: {
-              horizontal: false,
-            },
-          },
-          stroke: {
-            width: 1,
-            colors: ['#fff']
-          },
-          title: {
-            text: 'Cost Data',
-            style: {
-              color:  '#fff'
-            },
-          },
-          xaxis: {
-            categories: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            labels: {
-              style: {
-                  colors: ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
-              },
-            },
-            title: {
-              text: 'Year',
-              style: {
-                color:  '#fff'
-              },
-            },
-          },
-          yaxis: {
-            title: {
-              text: 'Cost (USD)',
-              style: {
-                color:  '#fff'
-              },
-            },
-            labels: {
-              formatter: function (val) {
-                return val + "K"
-              },
-              style: {
-                  colors: ['#fff', '#fff', '#fff', '#fff', '#fff', '#fff', '#fff'],
-              },
-            }
-          },
-          tooltip: {
-            x: {
-              formatter: function (val) {
-                return "Year " + val
-              }
-            }
-          },
-          fill: {
-            opacity: 1
-          },
-          legend: {
-            position: 'top',
-            horizontalAlign: 'left',
-            offsetX: 0,
-            labels: {
-                colors: '#fff'
-            }
-          }
-        },
-      };
-
-      let state2 = {
-        series: [{
-            name: "CI",
-            data: [null, 90.81, 90.27, 89.70, 89.09, 88.45, 87.77, 87.05, 86.29, 85.48, 84.63]
-        }],
-        options: {
-          chart: {
-            height: 350,
-            type: 'line',
-            zoom: {
-              enabled: false
-            },
-            toolbar: {
-              show: false
-            },
-          },
-          dataLabels: {
-            enabled: false
-          },
-          stroke: {
-            curve: 'smooth'
-          },
-          title: {
-            text: 'Condition Index',
-            align: 'left',
-            style: {
-              color:  '#fff'
-            },
-          },
-          grid: {
-            row: {
-              colors: ['transparent'], // takes an array which will be repeated on columns
-            },
-          },
-          xaxis: {
-            categories: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            labels: {
-              style: {
-                  colors: ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
-              },
-            },
-            title: {
-              text: "Year",
-              style: {
-                color:  '#fff'
-              },
-            },
-          },
-          yaxis: {
-            title: {
-              text: undefined
-            },
-            labels: {
-              formatter: function (val) {
-                return val + "%"
-              },
-              style: {
-                  colors: ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
-              },
-            }
-          },
-          tooltip: {
-            x: {
-              formatter: function (val) {
-                return "Year " + (val-1)
-              }
-            }
-          },
-        },  
-      };
-        
+    } else if (tab === 2) { // cond. idx
+      const data = CIVizData(assetData.CIdata);
       return (
-        <React.Fragment>
-        <Chart options={state2.options} series={state2.series} type="line" width={600} height={350} />
-        <Chart options={state.options} series={state.series} type="bar" width={600} height={320} />
-        </React.Fragment>
+        <div>
+          <Chart options={data.options} series={data.series} type="line" width={600} height={350} />
+        </div>
       )
-      
-    } else if (tab === 4) {
+    } else if (tab === 3) { // cost data
+      const data = CostVizData(assetData.costs);
+      return (
+        <div>
+          <Chart options={data.options} series={data.series} type="bar" width={600} height={350} />
+        </div>
+      )
+    } else if (tab === 4) { // sensor data
+      return null;
+    } else { // floor plan
       return <div id="viewer2D"/>
     }
   }
 
   // load 2D sheet
   useEffect(() => {
-    if (tab === 4) {
+    if (tab === 5) {
       const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('viewer2D'));
       viewer.start();
       const items = props.document.getRoot().search({'type':'geometry', 'role': '2d'});
       viewer.loadDocumentNode(props.document, items[0]);
     }
-
   }, [tab])
 
   const groupSelect = props.groups ? (
@@ -395,19 +252,22 @@ function DisciplinePanelContent(props) {
       </FormControl>
     </FormGroup>
   ) : null;
-  const assetData = selectedAsset ? (
+  const assetContent = selectedAsset && assetData ? (
     <div>
       <Nav bsStyle="tabs" activeKey={tab} onSelect={k => setTab(k)}>
         <NavItem eventKey={1}>
           Overview
         </NavItem>
         <NavItem eventKey={2} >
-          Cost Data & Condition Index (CI)
+          Condition Index (CI)
         </NavItem>
         <NavItem eventKey={3} >
-          Sensor Data
+          Cost Data
         </NavItem>
         <NavItem eventKey={4} >
+          Sensor Data
+        </NavItem>
+        <NavItem eventKey={5} >
           Floor Plan
         </NavItem>
       </Nav>
@@ -417,17 +277,13 @@ function DisciplinePanelContent(props) {
     </div>
   ) : null;
 
-  return !isLoading ? (
+  return (
     <div className='react-content'>
       <div className='panel-form-container'>
       { groupSelect }
       { assetSelect }
       </div>
-      { assetData }
-    </div>
-  ) : (
-    <div className='react-content'>
-      Loading...
+      { assetContent }
     </div>
   );
 }

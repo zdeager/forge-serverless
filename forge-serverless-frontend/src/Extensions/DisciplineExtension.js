@@ -29,24 +29,28 @@ class DisciplineExtension extends Autodesk.Viewing.Extension {
         groups: ["Wastewater", "Domestic Water"],
         icon: "pipe"
       },
-      // {
-      //   name: "Special Airport Systems",
-      //   groups: ["Baggage Handling System", "Baggage Screening",
-      //     "Security Access Control", "Lift Elevator Escalator",
-      //     "Passenger Boarding Bridge"]
-      // },
-      // {
-      //   name: "Information Technology",
-      //   groups: ["Information Communication"]
-      // },
-      // {
-      //   name: "Architecture",
-      //   groups: []
-      // },
-      // {
-      //   name: "Structure",
-      //   groups: []
-      // }
+      {
+        name: "Special Airport Systems",
+        groups: ["Baggage Handling System", "Baggage Screening",
+          "Security Access Control", "Lift Elevator Escalator",
+          "Passenger Boarding Bridge"],
+        icon: "convey"
+      },
+      {
+        name: "Information Technology",
+        groups: ["Information Communication"],
+        icon: "info"
+      },
+      {
+        name: "Architecture",
+        groups: [],
+        icon: "arch"
+      },
+      {
+        name: "Structure",
+        groups: [],
+        icon: "pillars"
+      }
     ];
     this._buttons = this._disciplines.map(disp => null);
     this._panels = this._buttons.slice();
