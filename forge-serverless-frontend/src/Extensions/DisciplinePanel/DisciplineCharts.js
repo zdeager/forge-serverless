@@ -1,6 +1,7 @@
+import moment from 'moment'
+
 export function CIVizData(CIData) {
   const categories = CIData.map((data, idx) => idx);
-  const label_colors = CIData.map((data, idx) => '#fff');
   return {
     series: [{
         name: "CI",
@@ -166,3 +167,92 @@ export function CostVizData(costData) {
     },
   };
 }
+
+export function SensorVizData(sensorData, baselineData) {
+  return {
+    series: [{
+      name: 'Measurement',
+      data: sensorData
+    }, {
+      name: 'Baseline',
+      data: baselineData
+    }],
+    options: {
+      chart: {
+        id: 'realtime',
+        height: 350,
+        type: 'line',
+        animations: {
+          enabled: true,
+          easing: 'linear',
+          dynamicAnimation: {
+            speed: 1000
+          }
+        },
+        toolbar: {
+          show: false
+        },
+        zoom: {
+          enabled: false
+        }
+      },
+      dataLabels: {
+        enabled: false
+      },
+      stroke: {
+        curve: 'smooth'
+      },
+      title: {
+        text: 'Sensor Data',
+        align: 'left',
+        style: {
+          color:  '#fff'
+        },
+      },
+      markers: {
+        size: 0
+      },
+      xaxis: {
+        range: 9000,
+        tickAmount: 9,
+        labels: {
+          formatter: function (value, timestamp) {
+            return moment(timestamp).format("HH:mm:ss")
+          }, 
+          style: {
+              colors: '#fff',
+          },
+        }
+      },
+      yaxis: {
+        max: 100,
+        title: {
+          text: 'Measurement',
+          style: {
+            color:  '#fff'
+          },
+        },
+        labels: {
+          style: {
+              colors: '#fff',
+          },
+        }
+      },
+      tooltip: {
+        x: {
+          formatter: function (value) {
+            return moment(value).format("HH:mm:ss")
+          }, 
+        }
+      },
+      legend: {
+        show: true,
+        position: 'top',
+        labels: {
+            colors: '#fff',
+        },
+      },
+    }
+  };
+}
+

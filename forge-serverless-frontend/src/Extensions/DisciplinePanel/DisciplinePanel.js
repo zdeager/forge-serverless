@@ -6,18 +6,18 @@ import ReactDOM from 'react-dom';
 import { API } from "aws-amplify";
 import Chart from 'react-apexcharts'
 import moment from 'moment'
-import { CIVizData, CostVizData } from './DisciplineCharts'
+import { CIVizData, CostVizData, SensorVizData } from './DisciplineCharts'
 
 // panel styles
 import { 
   FormGroup, 
   FormControl, 
   ControlLabel, 
-  Nav, 
-  NavItem, 
   Row, 
   Col, 
-  Button 
+  Button,
+  Tabs,
+  Tab
 } from "react-bootstrap";
 import './DisciplinePanel.css';
 
@@ -62,6 +62,39 @@ function DisciplinePanelContent(props) {
   const [tab, setTab] = useState(1);
   const [showId, setShowId] = useState(false);
   const [noteInput, setNoteInput] = useState("");
+  const [chartData, setChartData] = useState(null);
+  const [chartDataCI, setChartDataCI] = useState(null);
+  const [chartDataCost, setChartDataCost] = useState(null);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setChartData(chartData => {
+        const yrange = {min: 10, max: 90 };
+        if (!chartData) {
+          const x = new Date().getTime();
+          const y = Math.floor(Math.random() * (yrange.max - yrange.min + 1)) + yrange.min;
+          const data = [{ x, y }];
+          const baseline = [{ x, y: 54 }];
+          return SensorVizData(data, baseline);
+        } else {
+          let data = chartData.series[0].data;
+          const date = new Date().getTime();
+          data = [...data, {
+            x: date,
+            y: Math.floor(Math.random() * (yrange.max - yrange.min + 1)) + yrange.min
+          }];
+          let baseline = chartData.series[1].data;
+          baseline = [...baseline, {
+            x: date,
+            y: 54
+          }];
+          return SensorVizData(data, baseline);
+        }});
+      }, 1000);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
 
   function selectGroup(group) {
     // search model for elements in asset group
@@ -85,6 +118,8 @@ function DisciplinePanelContent(props) {
       setAssetData(resp);
       props.viewer.fitToView([asset.dbId]);
       props.viewer.isolate([asset.dbId]);
+      setChartDataCI(CIVizData(resp.CIdata));
+      setChartDataCost(CostVizData(resp.costs));
     });
   }
 
@@ -96,113 +131,6 @@ function DisciplinePanelContent(props) {
     };
     setNotes([...notes, note]);
     setNoteInput("");
-  }
-
-  function tabContent() {
-    if (tab === 1) { // overview
-      return (
-        <Row style={{display: "flex"}}>
-          <Col xs={4}>
-            <div>
-              <div className="data-block"><span className="data-label">UniqueID</span>
-                { !showId ? <a onClick={()=>setShowId(true)}>Show</a> : selectedAsset.extId }
-              </div>
-              <div className="data-block">
-                <span className="data-label">Criticality</span>{ assetData.criticality }
-              </div>
-              <div className="data-block">
-                <span className="data-label">Assignee(s)</span>
-                <ul className="data-list">
-                  {
-                    assetData.contacts.map((contact, idx) => (
-                      <li key={idx}>{contact.name} <a>Contact</a></li>
-                    ))
-                  }
-                </ul>
-              </div>
-              <div className="data-block">
-                <span className="data-label">Information System(s)</span>
-                <ul className="data-list">
-                  {
-                    assetData.sources.map((source, idx) => (
-                      <li key={idx}>{ source.name }</li>
-                    ))
-                  }
-                </ul>
-              </div>
-              <div className="data-block">
-                <span className="data-label">Functional Location</span>
-                <ul className="data-list">
-                  <li><span className="data-label">Building</span>{ assetData.location.building }</li>
-                  <li><span className="data-label">Floor</span>{ assetData.location.floor }</li>
-                  <li><span className="data-label">Room</span>{ assetData.location.room }</li>
-                  <li><span className="data-label">Room Func.</span>{ assetData.location.func }</li>
-                </ul>
-              </div>
-              <div className="data-block">
-                <span className="data-label">Warranty</span>
-                <ul className="data-list">
-                    <li><span className="data-label">Procured</span> 
-                      { moment(new Date(assetData.warranty.procure_date)).format("ll") }
-                    </li>
-                    <li><span className="data-label">Expires</span>
-                      { moment(new Date(assetData.warranty.expir_date)).format("ll") }
-                    </li>
-                    <li><span className="data-label">Spare Parts</span>
-                      { assetData.warranty.spare_parts }
-                    </li>
-                </ul>
-              </div>
-              <div className="data-block">
-                <span className="data-label">Sensor Status</span> 
-                <span style={{fontWeight: 900, color: "springgreen"}}>OK</span><br/>
-              </div>
-            </div>
-          </Col>
-          <Col xs={8}>
-            <span className="data-label">Notes</span>
-              {
-                assetData.notes.map((note, idx) => (
-                  <div key={idx} className="note">
-                    <div className="text-muted">
-                    { moment(new Date(note.date)).format("ll") } 
-                    </div>
-                    <div>{ note.note }</div>
-                  </div>
-                ))
-              }
-              <FormGroup style={{marginBottom: "10px"}}>
-                <FormControl 
-                  className="textbox" 
-                  componentClass="textarea" 
-                  placeholder="Note..." 
-                  value={noteInput}
-                  onChange={e => setNoteInput(e.target.value)}
-                />
-              </FormGroup>
-              <Button onClick={addNote}>Add note</Button>
-          </Col>
-        </Row>
-      );
-    } else if (tab === 2) { // cond. idx
-      const data = CIVizData(assetData.CIdata);
-      return (
-        <div>
-          <Chart options={data.options} series={data.series} type="line" width={600} height={350} />
-        </div>
-      )
-    } else if (tab === 3) { // cost data
-      const data = CostVizData(assetData.costs);
-      return (
-        <div>
-          <Chart options={data.options} series={data.series} type="bar" width={600} height={350} />
-        </div>
-      )
-    } else if (tab === 4) { // sensor data
-      return null;
-    } else { // floor plan
-      return <div id="viewer2D"/>
-    }
   }
 
   // load 2D sheet
@@ -252,28 +180,117 @@ function DisciplinePanelContent(props) {
       </FormControl>
     </FormGroup>
   ) : null;
-  const assetContent = selectedAsset && assetData ? (
+  const assetContent = selectedAsset && chartData && assetData && chartDataCI && chartDataCost ? (
     <div>
-      <Nav bsStyle="tabs" activeKey={tab} onSelect={k => setTab(k)}>
-        <NavItem eventKey={1}>
-          Overview
-        </NavItem>
-        <NavItem eventKey={2} >
-          Condition Index (CI)
-        </NavItem>
-        <NavItem eventKey={3} >
-          Cost Data
-        </NavItem>
-        <NavItem eventKey={4} >
-          Sensor Data
-        </NavItem>
-        <NavItem eventKey={5} >
-          Floor Plan
-        </NavItem>
-      </Nav>
-      <div className="tab-content">
-        { tabContent() }
-      </div>
+      <Tabs 
+        activeKey={tab}
+        onSelect={(k)=>setTab(k)}
+        id="controlled-tab-example"
+        animation={false} 
+      >
+        <Tab eventKey={1} title="Overview">
+          <Row style={{display: "flex"}}>
+            <Col xs={4}>
+              <div>
+                <div className="data-block"><span className="data-label">UniqueID</span>
+                  { !showId ? <a onClick={()=>setShowId(true)}>Show</a> : selectedAsset.extId }
+                </div>
+                <div className="data-block">
+                  <span className="data-label">Criticality</span>{ assetData.criticality }
+                </div>
+                <div className="data-block">
+                  <span className="data-label">Assignee(s)</span>
+                  <ul className="data-list">
+                    {
+                      assetData.contacts.map((contact, idx) => (
+                        <li key={idx}>{contact.name} <a>Contact</a></li>
+                      ))
+                    }
+                  </ul>
+                </div>
+                <div className="data-block">
+                  <span className="data-label">Information System(s)</span>
+                  <ul className="data-list">
+                    {
+                      assetData.sources.map((source, idx) => (
+                        <li key={idx}>{ source.name }</li>
+                      ))
+                    }
+                  </ul>
+                </div>
+                <div className="data-block">
+                  <span className="data-label">Functional Location</span>
+                  <ul className="data-list">
+                    <li><span className="data-label">Building</span>{ assetData.location.building }</li>
+                    <li><span className="data-label">Floor</span>{ assetData.location.floor }</li>
+                    <li><span className="data-label">Room</span>{ assetData.location.room }</li>
+                    <li><span className="data-label">Room Func.</span>{ assetData.location.func }</li>
+                  </ul>
+                </div>
+                <div className="data-block">
+                  <span className="data-label">Warranty</span>
+                  <ul className="data-list">
+                      <li><span className="data-label">Procured</span> 
+                        { moment(new Date(assetData.warranty.procure_date)).format("ll") }
+                      </li>
+                      <li><span className="data-label">Expires</span>
+                        { moment(new Date(assetData.warranty.expir_date)).format("ll") }
+                      </li>
+                      <li><span className="data-label">Spare Parts</span>
+                        { assetData.warranty.spare_parts }
+                      </li>
+                  </ul>
+                </div>
+                <div className="data-block">
+                  <span className="data-label">Sensor Status</span> 
+                  <span style={{fontWeight: 900, color: "springgreen"}}>OK</span><br/>
+                </div>
+              </div>
+            </Col>
+            <Col xs={8}>
+              <span className="data-label">Notes</span>
+                {
+                  assetData.notes.map((note, idx) => (
+                    <div key={idx} className="note">
+                      <div className="text-muted">
+                      { moment(new Date(note.date)).format("ll") } 
+                      </div>
+                      <div>{ note.note }</div>
+                    </div>
+                  ))
+                }
+                <FormGroup style={{marginBottom: "10px"}}>
+                  <FormControl 
+                    className="textbox" 
+                    componentClass="textarea" 
+                    placeholder="Note..." 
+                    value={noteInput}
+                    onChange={e => setNoteInput(e.target.value)}
+                  />
+                </FormGroup>
+                <Button onClick={addNote}>Add note</Button>
+            </Col>
+          </Row>
+        </Tab>
+        <Tab eventKey={2} title="Condition Index (CI)">
+          <div>
+            <Chart options={chartDataCI.options} series={chartDataCI.series} type="line" />
+          </div>
+        </Tab>
+        <Tab eventKey={3} title="Cost Data">
+          <div>
+            <Chart options={chartDataCost.options} series={chartDataCost.series} type="bar" />
+          </div>
+        </Tab>
+        <Tab eventKey={4} title="Sensor Data">
+          <div>
+            <Chart options={chartData.options} series={chartData.series} type="line" />
+          </div>
+        </Tab>
+        <Tab eventKey={5} title="Floor Plan">
+          <div id="viewer2D"/>
+        </Tab>
+      </Tabs>
     </div>
   ) : null;
 
