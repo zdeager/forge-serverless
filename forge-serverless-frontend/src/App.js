@@ -143,7 +143,7 @@ function App(props) {
         // initialize the viewer
         Autodesk.Viewing.Initializer(options, () => {
           // create new viewer and load extensions specified in config.js
-          viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('forgeViewer'), { extensions: config.extensions });
+          viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('forgeViewer'));
           viewer.start();
         });
       }
@@ -154,6 +154,7 @@ function App(props) {
         documentId, 
         (document) => {
           const viewables = (viewableId ? document.getRoot().findByGuid(viewableId) : document.getRoot().getDefaultGeometry());
+          viewer.loadExtension(config.extensions[0], {document: document});
           viewer.loadDocumentNode(document, viewables);
         }, 
         (error) => {
@@ -224,7 +225,7 @@ function App(props) {
             <a target="_blank" href="http://developer.autodesk.com">
               <img 
                 alt="Autodesk Forge" 
-                src="http://developer.static.autodesk.com/images/logo_forge-2-line.png" 
+                src="https://developer.static.autodesk.com/images/logo_forge-2-line.png" 
                 height="20"
               />
             </a>

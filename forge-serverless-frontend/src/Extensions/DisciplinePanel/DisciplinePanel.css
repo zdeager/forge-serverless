@@ -1,0 +1,98 @@
+.react-docking-panel {
+  left: 150px;
+  top: 50px;
+  height: 300px;
+  width: 700px;
+  resize: auto;
+}
+
+.react-docking-panel .content {
+  height: calc(100% - 70px);
+  background-color: rgba(0, 0, 0, 0.75);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.react-docking-panel .content .react-content {
+  padding: 10px;
+}
+
+/*dropdown boxes*/
+.panel-form-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.panel-form-l {
+  width: 40%;
+  margin-right: 30px;
+}
+.panel-form-r {
+  width: 40%;
+  margin-right: 30px;
+}
+
+/*tabs*/
+.nav-tabs>li>a{
+  color: #fff;
+}
+
+.nav-tabs>li>a:focus, 
+.nav-tabs>li>a:hover {
+  background-color: #ddd;
+  color:#777;
+}
+
+.nav-tabs>li.active>a, 
+.nav-tabs>li.active>a:focus, 
+.nav-tabs>li.active>a:hover {
+  background-color: #f8f8f8;
+  color:#777;
+}
+
+/*tab contents*/
+.tab-content {
+  width: calc(100% - 40px);
+  padding: 20px;
+}
+
+.data-label {
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.data-block {
+  margin-bottom: 5px;
+}
+
+.data-list {
+  list-style-type: none;
+  margin: 0 0 0 -25px;
+}
+
+a { 
+  cursor: pointer; 
+}
+
+.note{
+  margin-top: 5px;
+  margin-bottom: 10px;
+  margin-left: 15px;
+}
+
+.textbox {
+  width: calc(100% - 26px);
+  height: 75px;
+  resize: none;
+  background-color: unset;
+  color: #fff;
+}
+
+#viewer-2D > .adsk-viewing-viewer.notouch.dark-theme.quality-text {
+  height: 325px !important;
+  width: calc(100% - 60px) !important;
+}
+
+.apexcharts-tooltip {
+  color: #000;
+}
