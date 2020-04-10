@@ -225,7 +225,7 @@ function App(props) {
             <a target="_blank" href="http://developer.autodesk.com">
               <img 
                 alt="Autodesk Forge" 
-                src="http://developer.static.autodesk.com/images/logo_forge-2-line.png" 
+                src="https://developer.static.autodesk.com/images/logo_forge-2-line.png" 
                 height="20"
               />
             </a>

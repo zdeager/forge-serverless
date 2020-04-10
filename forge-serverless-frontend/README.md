@@ -1,8 +1,8 @@
 # forge-serverless-frontend
 
-[![Node.js](https://img.shields.io/badge/Node.js-13.9.0-blue.svg)](https://nodejs.org/)
-[![npm](https://img.shields.io/badge/npm-6.13.7-blue.svg)](https://www.npmjs.com/)
-[![webpack](https://img.shields.io/badge/webpack-4.41.6-blue.svg)](https://webpack.js.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-13.12.0-blue.svg)](https://nodejs.org/)
+[![npm](https://img.shields.io/badge/npm-6.14.4-blue.svg)](https://www.npmjs.com/)
+[![webpack](https://img.shields.io/badge/webpack-4.42.1-blue.svg)](https://webpack.js.org/)
 
 # Description
 
