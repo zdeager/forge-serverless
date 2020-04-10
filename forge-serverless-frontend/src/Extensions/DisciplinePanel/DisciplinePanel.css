@@ -89,7 +89,7 @@ a {
 }
 
 #viewer-2D > .adsk-viewing-viewer.notouch.dark-theme.quality-text {
-  height: 44vh !important;
+  height: 325px !important;
   width: calc(100% - 60px) !important;
 }
 

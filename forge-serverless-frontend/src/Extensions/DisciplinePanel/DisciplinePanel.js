@@ -58,7 +58,7 @@ function DisciplinePanelContent(props) {
   // asset selectors
   const [selectedGroup, setSelectedGroup] = useState("");
   const [assets, setAssets] = useState(null);
-  const [selectedAsset, setSelectedAsset] = useState("");
+  const [selectedAsset, setSelectedAsset] = useState(null);
   const [assetData, setAssetData] = useState(null);
 
   // asset content
@@ -69,8 +69,14 @@ function DisciplinePanelContent(props) {
   const [chartDataCI, setChartDataCI] = useState(null);
   const [chartDataCost, setChartDataCost] = useState(null);
   const [viewer2D, setViewer2D] = useState(null);
+  const [items2D, setItems2D] = useState(null);
+  const [selectedItem2D, setSelectedItem2D] = useState("");
 
   useEffect(() => {
+    // get 2d items in document
+    const items = props.document.getRoot().search({'type':'geometry', 'role': '2d'});
+    setItems2D(items);
+
     // fetch/update sensor data at a specific interval
     const timer = window.setInterval(() => {
       setChartDataSensor(chartDataSensor => { // note: param is CURRENT data
@@ -123,11 +129,11 @@ function DisciplinePanelContent(props) {
   }
 
   function selectAsset(asset_idx) {
-    const asset = assets[asset_idx];
+    let asset = assets[asset_idx];
+    asset.idx = parseInt(asset_idx); // add index to asset data (for form)
+    setSelectedAsset(asset);
     // fetch asset data from ddb
     API.get("forge-serverless-api", "/assets/" + asset.extId).then(resp => {
-      // update state variables
-      setSelectedAsset(asset);
       setAssetData(resp);
       // focus on asset in viewer
       props.viewer.fitToView([asset.dbId]);
@@ -159,27 +165,43 @@ function DisciplinePanelContent(props) {
     });
   }
 
-  // load 2D sheet
+  // if leaving 2d viewer tab -> destroy 2d viewer
   useEffect(() => {
-    if (tab === 5) {
-      const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('viewer-2D'));
-      viewer.start();
-      // search for 2d items
-      const items = props.document.getRoot().search({'type':'geometry', 'role': '2d'});
-      viewer.loadDocumentNode(props.document, items[0]); // load first item
-      // viewer.waitForLoadDone().then(() => {
-      //   viewer.fitToView([2423]);
-      //   viewer.isolate([2423]);
-      // });
-      setViewer2D(viewer)
-    } else {
-      if (viewer2D){
-        // destroy 2d viewer
-        viewer2D.finish();
-        setViewer2D(null);
-      }
+    if (tab !== 5 && viewer2D) {
+      viewer2D.finish();
+      setViewer2D(null);
+      setSelectedItem2D("");
     }
-  }, [tab])
+  }, [tab, viewer2D])
+
+  function selectItem2D(item2D_idx) {
+    const item = items2D[item2D_idx];
+    setSelectedItem2D(item2D_idx);
+    let viewer = viewer2D;
+    if (!viewer) {
+      viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('viewer-2D'));
+      viewer.start();
+      setViewer2D(viewer);
+    } 
+    viewer.loadDocumentNode(props.document, item);
+  }
+
+  const item2DSelect = items2D ? (
+    <FormGroup className="panel-form-l">
+      <FormControl 
+        componentClass="select"
+        value={selectedItem2D}
+        onChange={e => selectItem2D(e.target.value)}
+      >
+        <option value="" disabled>Select</option>
+        {
+          items2D.map((item, idx) => {
+            return (<option key={idx} value={idx}>{item.data.name}</option>)
+          })
+        }
+      </FormControl>
+    </FormGroup>
+  ) : null;
 
   const groupSelect = props.groups ? (
     <FormGroup className="panel-form-l">
@@ -189,7 +211,7 @@ function DisciplinePanelContent(props) {
         value={selectedGroup}
         onChange={e => {
           selectGroup(e.target.value);
-          setSelectedAsset("");
+          setSelectedAsset(null);
         }}
       >
         <option value="" disabled>Select</option>
@@ -207,7 +229,7 @@ function DisciplinePanelContent(props) {
       <ControlLabel>Critical Assets</ControlLabel>
       <FormControl 
         componentClass="select"
-        value={selectedAsset}
+        value={selectedAsset ? selectAsset.idx : ""}
         onChange={e => selectAsset(e.target.value)}
       >
         <option value="" disabled>Select</option>
@@ -333,6 +355,7 @@ function DisciplinePanelContent(props) {
           }
         </Tab>
         <Tab eventKey={5} title="Floor Plan">
+          { item2DSelect }
           <div id="viewer-2D"/>
         </Tab>
       </Tabs>
