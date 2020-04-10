@@ -55,46 +55,57 @@ class DisciplinePanel extends Autodesk.Viewing.UI.DockingPanel {
 
 // Panel content (React)
 function DisciplinePanelContent(props) {
+  // asset selectors
   const [selectedGroup, setSelectedGroup] = useState("");
   const [assets, setAssets] = useState(null);
   const [selectedAsset, setSelectedAsset] = useState("");
   const [assetData, setAssetData] = useState(null);
+
+  // asset content
   const [tab, setTab] = useState(1);
   const [showId, setShowId] = useState(false);
   const [noteInput, setNoteInput] = useState("");
-  const [chartData, setChartData] = useState(null);
+  const [chartDataSensor, setChartDataSensor] = useState(null);
   const [chartDataCI, setChartDataCI] = useState(null);
   const [chartDataCost, setChartDataCost] = useState(null);
+  const [viewer2D, setViewer2D] = useState(null);
 
   useEffect(() => {
+    // fetch/update sensor data at a specific interval
     const timer = window.setInterval(() => {
-      setChartData(chartData => {
-        const yrange = {min: 10, max: 90 };
-        if (!chartData) {
-          const x = new Date().getTime();
-          const y = Math.floor(Math.random() * (yrange.max - yrange.min + 1)) + yrange.min;
-          const data = [{ x, y }];
-          const baseline = [{ x, y: 54 }];
-          return SensorVizData(data, baseline);
-        } else {
-          let data = chartData.series[0].data;
-          const date = new Date().getTime();
-          data = [...data, {
-            x: date,
-            y: Math.floor(Math.random() * (yrange.max - yrange.min + 1)) + yrange.min
-          }];
-          let baseline = chartData.series[1].data;
-          baseline = [...baseline, {
-            x: date,
-            y: 54
-          }];
-          return SensorVizData(data, baseline);
-        }});
-      }, 1000);
+      setChartDataSensor(chartDataSensor => { // note: param is CURRENT data
+        if (chartDataSensor) {
+          const newData = _mkData();
+          let sensor = chartDataSensor.series[0].data;
+          sensor = [...sensor, newData.sensor];
+          let baseline = chartDataSensor.series[1].data;
+          baseline = [...baseline, newData.baseline];
+          return SensorVizData(sensor, baseline);
+        }
+      });
+    }, 1000);
     return () => {
       window.clearInterval(timer);
     };
   }, []);
+
+  // generate fake sensor data
+  function _mkData() {
+    const yrange = {min: 10, max: 90};
+    const date = new Date().getTime();
+    const sensor = {
+      x: date,
+      y: Math.floor(Math.random() * (yrange.max - yrange.min + 1)) + yrange.min
+    }
+    const baseline = {
+      x: date,
+      y: 54 // fake baseline value
+    }
+    return {
+      sensor: sensor,
+      baseline: baseline
+    }
+  }
 
   function selectGroup(group) {
     // search model for elements in asset group
@@ -113,33 +124,60 @@ function DisciplinePanelContent(props) {
 
   function selectAsset(asset_idx) {
     const asset = assets[asset_idx];
+    // fetch asset data from ddb
     API.get("forge-serverless-api", "/assets/" + asset.extId).then(resp => {
+      // update state variables
       setSelectedAsset(asset);
       setAssetData(resp);
+      // focus on asset in viewer
       props.viewer.fitToView([asset.dbId]);
       props.viewer.isolate([asset.dbId]);
+      // initialize chart data for asset
       setChartDataCI(CIVizData(resp.CIdata));
       setChartDataCost(CostVizData(resp.costs));
+      const initData = _mkData();
+      setChartDataSensor(SensorVizData([initData.sensor], [initData.baseline]));
     });
   }
 
   function addNote() {
     if (!noteInput) return;
-    const note = {
-      date: "2 Apr 2020",
-      text: noteInput
-    };
-    setNotes([...notes, note]);
-    setNoteInput("");
+    const data = { 
+      body: {
+        asset_id: selectedAsset.extId,
+        note: noteInput
+      }
+    }
+    // add note to asset data in ddb
+    API.post("forge-serverless-api", "/add_note/", data).then(resp => {
+      const notes = [ ...assetData.notes, {
+        note: resp.note,
+        date: resp.date
+      }];
+      setAssetData(Object.assign({}, assetData, {notes: notes}));
+      setNoteInput("");
+    });
   }
 
   // load 2D sheet
   useEffect(() => {
     if (tab === 5) {
-      const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('viewer2D'));
+      const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('viewer-2D'));
       viewer.start();
+      // search for 2d items
       const items = props.document.getRoot().search({'type':'geometry', 'role': '2d'});
-      viewer.loadDocumentNode(props.document, items[0]);
+      viewer.loadDocumentNode(props.document, items[0]); // load first item
+      // viewer.waitForLoadDone().then(() => {
+      //   viewer.fitToView([2423]);
+      //   viewer.isolate([2423]);
+      // });
+      setViewer2D(viewer)
+    } else {
+      if (viewer2D){
+        // destroy 2d viewer
+        viewer2D.finish();
+        setViewer2D(null);
+      }
     }
   }, [tab])
 
@@ -163,6 +201,7 @@ function DisciplinePanelContent(props) {
       </FormControl>
     </FormGroup>
   ): null;
+
   const assetSelect = assets ? (
     <FormGroup className="panel-form-r">
       <ControlLabel>Critical Assets</ControlLabel>
@@ -180,7 +219,8 @@ function DisciplinePanelContent(props) {
       </FormControl>
     </FormGroup>
   ) : null;
-  const assetContent = selectedAsset && chartData && assetData && chartDataCI && chartDataCost ? (
+
+  const assetContent = selectedAsset && assetData ? (
     <div>
       <Tabs 
         activeKey={tab}
@@ -203,7 +243,9 @@ function DisciplinePanelContent(props) {
                   <ul className="data-list">
                     {
                       assetData.contacts.map((contact, idx) => (
-                        <li key={idx}>{contact.name} <a>Contact</a></li>
+                        <li key={idx}>{contact.name} 
+                          <a href={"mailto:" + contact.email}> Contact</a>
+                        </li>
                       ))
                     }
                   </ul>
@@ -213,7 +255,7 @@ function DisciplinePanelContent(props) {
                   <ul className="data-list">
                     {
                       assetData.sources.map((source, idx) => (
-                        <li key={idx}>{ source.name }</li>
+                        <li key={idx}>{ source }</li>
                       ))
                     }
                   </ul>
@@ -273,22 +315,25 @@ function DisciplinePanelContent(props) {
           </Row>
         </Tab>
         <Tab eventKey={2} title="Condition Index (CI)">
-          <div>
-            <Chart options={chartDataCI.options} series={chartDataCI.series} type="line" />
-          </div>
+          {
+            chartDataCI && 
+            <Chart options={chartDataCI.options} series={chartDataCI.series} height={360} type="line" />
+          }
         </Tab>
         <Tab eventKey={3} title="Cost Data">
-          <div>
-            <Chart options={chartDataCost.options} series={chartDataCost.series} type="bar" />
-          </div>
+          {
+            chartDataCost &&
+            <Chart options={chartDataCost.options} series={chartDataCost.series} height={360} type="bar" />
+          }
         </Tab>
         <Tab eventKey={4} title="Sensor Data">
-          <div>
-            <Chart options={chartData.options} series={chartData.series} type="line" />
-          </div>
+          {
+            chartDataSensor &&
+            <Chart options={chartDataSensor.options} series={chartDataSensor.series} height={360} type="line" />
+          }
         </Tab>
         <Tab eventKey={5} title="Floor Plan">
-          <div id="viewer2D"/>
+          <div id="viewer-2D"/>
         </Tab>
       </Tabs>
     </div>

@@ -2,13 +2,20 @@ import AWS from "aws-sdk";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
-export const get_asset = (event, context, callback) => {
+export const add_note = (event, context, callback) => {
+  const note_data = JSON.parse(event.body);
+  const date = (new Date()).toISOString().split('T')[0];
+
   const params = {
     TableName: "CriticalAssets",
-    Key: {asset_id: event.pathParameters.asset_id}
+    Key: {asset_id: note_data.asset_id},
+    UpdateExpression: "SET notes = list_append(notes, :note)",
+    ExpressionAttributeValues: {
+      ":note" : [{date: date, note: note_data.note}]
+    }
   };
 
-  dynamoDb.get(params, (error, data) => {
+  dynamoDb.update(params, (error, data) => {
     const headers = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Credentials": true
@@ -29,7 +36,7 @@ export const get_asset = (event, context, callback) => {
     const response = {
       statusCode: 200,
       headers: headers,
-      body: JSON.stringify(data.Item)
+      body: JSON.stringify({date: date, note: note_data.note})
     };
     callback(null, response);
   });

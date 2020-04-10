@@ -55,3 +55,10 @@ functions:
           path: assets/{asset_id}
           method: get
           cors: true
+  add_note:
+    handler: functions/disciplines/add_note.add_note
+    events:
+      - http:
+          path: add_note
+          method: post
+          cors: true

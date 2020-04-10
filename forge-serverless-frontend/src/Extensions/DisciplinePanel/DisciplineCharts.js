@@ -10,7 +10,7 @@ export function CIVizData(CIData) {
     options: {
       chart: {
         id: 'ci',
-        height: 350,
+        height: 360,
         type: 'line',
         zoom: {
           enabled: false
@@ -30,11 +30,6 @@ export function CIVizData(CIData) {
         align: 'left',
         style: {
           color:  '#fff'
-        },
-      },
-      grid: {
-        row: {
-          colors: ['transparent'], 
         },
       },
       xaxis: {
@@ -95,7 +90,7 @@ export function CostVizData(costData) {
       chart: {
         id: 'cost',
         type: 'bar',
-        height: 350,
+        height: 360,
         stacked: true,
         toolbar: {
           show: false
@@ -179,8 +174,8 @@ export function SensorVizData(sensorData, baselineData) {
     }],
     options: {
       chart: {
-        id: 'realtime',
-        height: 350,
+        id: 'sensor',
+        height: 360,
         type: 'line',
         animations: {
           enabled: true,
@@ -213,7 +208,7 @@ export function SensorVizData(sensorData, baselineData) {
         size: 0
       },
       xaxis: {
-        range: 9000,
+        range: 9000, // 9 seconds
         tickAmount: 9,
         labels: {
           formatter: function (value, timestamp) {
@@ -225,7 +220,6 @@ export function SensorVizData(sensorData, baselineData) {
         }
       },
       yaxis: {
-        max: 100,
         title: {
           text: 'Measurement',
           style: {

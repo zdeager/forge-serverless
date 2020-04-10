@@ -88,7 +88,7 @@ a {
   color: #fff;
 }
 
-#viewer2D > .adsk-viewing-viewer.notouch.dark-theme.quality-text {
+#viewer-2D > .adsk-viewing-viewer.notouch.dark-theme.quality-text {
   height: 44vh !important;
   width: calc(100% - 60px) !important;
 }
